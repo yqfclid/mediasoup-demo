@@ -551,6 +551,7 @@ async function runHttpServer(){
 		}
 		if(u.pathname === "/startconnect1"){
 			let room = rooms.get("123456");
+			logger.info("DDDDDD %s", room._consumePipe);
 			await room.startconnect1(remotePort)
 			res.end("ok");
 		}
