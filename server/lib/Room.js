@@ -317,12 +317,12 @@ class Room extends EventEmitter
 		for(const joinedPeer of this._getJoinedPeers()){
 			let transport = Array.from(joinedPeer.data.transports.values())
 			.find((t) => t.appData.consuming);
-			transport.consume({
+			let consumer = await transport.consume({
 				producerId: producer.id,
 				kind: "video",
 				rtpCapabilities: JSON.parse(rtpCCC)
 			})
-			joinedPeer.notify(
+			await joinedPeer.notify(
 			'newPeer',
 			{
 				id          : "remote-yqfclid",
@@ -330,6 +330,17 @@ class Room extends EventEmitter
 				device      : "remote-yqfclid"
 			})
 			.catch(() => {});
+			await joinedPeer.request(
+				'newConsumer',
+				{
+					peerId         : "12345",
+					producerId     : producer.id,
+					id             : consumer.id,
+					kind           : consumer.kind,
+					rtpParameters  : rtpPPP,
+					type           : "simple"
+				});
+
 		}
 	}
 	pipe1stat(){
