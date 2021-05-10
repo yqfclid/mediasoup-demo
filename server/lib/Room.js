@@ -310,11 +310,6 @@ class Room extends EventEmitter
 	}
 
 	startproduce(){
-		this._producePipe.produce({
-			id: "test_produce",
-			kind: "video",
-			rtpParameters: rtpPPP
-		});
 		for(const joinedPeer of this._getJoinedPeers()){
 			let transport = Array.from(joinedPeer.data.transports.values())
 			.find((t) => t.appData.consuming);
@@ -324,6 +319,11 @@ class Room extends EventEmitter
 				rtpCapabilities: JSON.parse(rtpCCC)
 			})
 		}
+		this._producePipe.produce({
+			id: "test_produce",
+			kind: "video",
+			rtpParameters: rtpPPP
+		});
 	}
 	pipe1stat(){
 		let stat = this._consumePipe.getStats();
