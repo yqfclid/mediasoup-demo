@@ -107,6 +107,9 @@ class Room extends EventEmitter
 		// @type {Boolean}
 		this._networkThrottled = false;
 
+		this._producePipe = undefined;
+
+		this._consumePipe = undefined;
 		// Handle audioLevelObserver.
 		this._handleAudioLevelObserver();
 
@@ -153,13 +156,15 @@ class Room extends EventEmitter
 			this._mediasoupRouter._transports.size); // NOTE: Private API.
 	}
 
-	createpipe1(){
-		this._consumePipe = this._mediasoupRouter.createPipeTransport({listenIp:"127.0.0.1"});
+	async createpipe1(){
+		logger.info("DEBUG!!2 %s", this._mediasoupRouter);
+		this._consumePipe = await this._mediasoupRouter.createPipeTransport({listenIp:"127.0.0.1"});
+		logger.info("DEBUG!!! %s", this._consumePipe);
 		return this._consumePipe.tuple.localPort;
 	}
 
-	createpipe2(){
-		this._producePipe = this._mediasoupRouter.createPipeTransport({listenIp:"127.0.0.1"});
+	async createpipe2(){
+		this._producePipe = await this._mediasoupRouter.createPipeTransport({listenIp:"127.0.0.1"});
 		return this._producePipe.tuple.localPort;
 	}
 
@@ -167,7 +172,7 @@ class Room extends EventEmitter
 		this._consumePipe.connect({ip:"127.0.0.1", port});
 	}
 
-	startconnect1(){
+	startconnect1(port){
 		this._producePipe.connect({ip:"127.0.0.1", port});
 	}
 

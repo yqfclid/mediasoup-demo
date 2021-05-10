@@ -540,17 +540,18 @@ async function getOrCreateRoom({ roomId })
 
 async function runHttpServer(){
 	const httpServer = http.createServer();
-	httpServer.on("request", function(req, res) {
+	httpServer.on("request", async function(req, res) {
 		const u = url.parse(req.url, true);
 		const remotePort = u.query['pipeport'];
 		if(u.pathname === "/createpipe1"){
 			let room = rooms.get("123456");
-			let port = room.createpipe1()
-			res.end(port);
+			let port = await room.createpipe1();
+			logger.info("port %s", port);
+			res.end(port.toString());
 		}
 		if(u.pathname === "/startconnect1"){
 			let room = rooms.get("123456");
-			let port = room.startconnect1(remotePort)
+			await room.startconnect1(remotePort)
 			res.end("ok");
 		}
 		if(u.pathname === "/stat"){
@@ -560,7 +561,7 @@ async function runHttpServer(){
 		}
 		if(u.pathname === "/consume"){
 			let room = rooms.get("123456");
-			room.startconsume()
+			await room.startconsume()
 			res.end("ok");
 		}
 	});
@@ -573,22 +574,23 @@ async function runHttpServer(){
 
 async function runHttpServer2(){
 	const httpServer = http.createServer();
-	httpServer.on("request", function(req, res) {
+	httpServer.on("request", async function(req, res) {
 		const u = url.parse(req.url, true);
 		const remotePort = u.query['pipeport'];
 		if(u.pathname === "/createpipe2"){
 			let room = rooms.get("123456");
-			let port = room.createpipe2()
-			res.end(port);
+			let port = await room.createpipe2()
+			logger.info("port %s", port);
+			res.end(port + "");
 		}
 		if(u.pathname === "/startconnect2"){
 			let room = rooms.get("123456");
-			let port = room.startconnect2(remotePort)
+			await room.startconnect2(remotePort)
 			res.end("ok");
 		}
 		if(u.pathname === "/produce"){
 			let room = rooms.get("123456");
-			room.startproduce()
+			await room.startproduce()
 			res.end("ok");
 		}
 	});
