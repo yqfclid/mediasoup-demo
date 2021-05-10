@@ -302,7 +302,7 @@ class Room extends EventEmitter
 					this._consumePipe.consume({
 						producerId: producer.id,
 						kind: "video",
-						rtpCapabilities: rtpCCC
+						rtpCapabilities: JSON.parse(rtpCCC)
 					});
 				}
 			}
@@ -321,7 +321,7 @@ class Room extends EventEmitter
 			transport.consume({
 				producerId: "test_produce",
 				kind: "video",
-				rtpCapabilities: rtpCCC
+				rtpCapabilities: JSON.parse(rtpCCC)
 			})
 		}
 	}
