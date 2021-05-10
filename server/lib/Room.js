@@ -168,23 +168,23 @@ class Room extends EventEmitter
 		return this._producePipe.tuple.localPort;
 	}
 
-	startconnect2(port){
-		this._producePipe.connect({ip:"127.0.0.1", port});
+	startconnect2(remoteport){
+		this._producePipe.connect({ip:"127.0.0.1", port:remoteport});
 	}
 
-	startconnect1(port){
+	startconnect1(remoteport){
 		logger.info("1234 %s", this._producePipe);
-		this._consumePipe.connect({ip:"127.0.0.1", port});
+		this._consumePipe.connect({ip:"127.0.0.1", port:remoteport});
 	}
 
 	startconsume(){
-		for(const joinedPeer of joinedPeers){
+		for(const joinedPeer of this._getJoinedPeers()){
 			for (const producer of joinedPeer.data.producers.values()){
 				if(producer.kind === "video"){
 					this._consumePipe.consume({
 						id: producer.id,
 						kind: "video",
-						rtpParameters: rtpPPP
+						rtpParameters: JSON.parse(rtpPPP)
 					});
 				}
 			}
