@@ -79,7 +79,7 @@ async function run()
 	await runProtooWebSocketServer();
 
 	await runHttpServer();
-	await runHttpServer2();
+	// await runHttpServer2();
 
 	// Log rooms status every X seconds.
 	setInterval(() =>
@@ -558,11 +558,15 @@ async function runHttpServer(){
 			room.pipe1stat()
 			res.end("ok");
 		}
-		
+		if(u.pathname === "/consume"){
+			let room = rooms.get("123456");
+			room.startconsume()
+			res.end("ok");
+		}
 	});
 	await new Promise((resolve) =>
 	{
-		httpServer.listen(5000, "127.0.0.1", resolve);
+		httpServer.listen(5001, "127.0.0.1", resolve);
 	});
 }
 
@@ -580,6 +584,11 @@ async function runHttpServer2(){
 		if(u.pathname === "/startconnect2"){
 			let room = rooms.get("123456");
 			let port = room.startconnect2(remotePort)
+			res.end("ok");
+		}
+		if(u.pathname === "/produce"){
+			let room = rooms.get("123456");
+			room.startproduce()
 			res.end("ok");
 		}
 	});

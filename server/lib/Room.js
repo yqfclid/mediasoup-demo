@@ -7,6 +7,8 @@ const Bot = require('./Bot');
 
 const logger = new Logger('Room');
 
+const rtpPPP = '{"codecs":[{"mimeType":"video/VP8","payloadType":96,"clockRate":90000,"parameters":{},"rtcpFeedback":[{"type":"goog-remb","parameter":""},{"type":"transport-cc","parameter":""},{"type":"ccm","parameter":"fir"},{"type":"nack","parameter":""},{"type":"nack","parameter":"pli"}]},{"mimeType":"video/rtx","payloadType":97,"clockRate":90000,"parameters":{"apt":96},"rtcpFeedback":[]}],"headerExtensions":[{"uri":"urn:ietf:params:rtp-hdrext:sdes:mid","id":4,"encrypt":false,"parameters":{}},{"uri":"urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id","id":5,"encrypt":false,"parameters":{}},{"uri":"urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id","id":6,"encrypt":false,"parameters":{}},{"uri":"http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time","id":2,"encrypt":false,"parameters":{}},{"uri":"http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01","id":3,"encrypt":false,"parameters":{}},{"uri":"urn:3gpp:video-orientation","id":13,"encrypt":false,"parameters":{}},{"uri":"urn:ietf:params:rtp-hdrext:toffset","id":14,"encrypt":false,"parameters":{}}],"encodings":[{"active":true,"scaleResolutionDownBy":4,"maxBitrate":500000,"rid":"r0","scalabilityMode":"S1T3","dtx":false},{"active":true,"scaleResolutionDownBy":2,"maxBitrate":1000000,"rid":"r1","scalabilityMode":"S1T3","dtx":false},{"active":true,"scaleResolutionDownBy":1,"maxBitrate":5000000,"rid":"r2","scalabilityMode":"S1T3","dtx":false}],"rtcp":{"cname":"","reducedSize":true},"mid":"1"}';
+
 /**
  * Room class.
  *
@@ -169,30 +171,54 @@ class Room extends EventEmitter
 		this._producePipe.connect({ip:"127.0.0.1", port});
 	}
 
+	startconsume(){
+		for(const joinedPeer of joinedPeers){
+			for (const producer of joinedPeer.data.producers.values()){
+				if(producer.kind === "video"){
+					this._consumePipe.consume({
+						id: producer.id,
+						kind: "video",
+						rtpParameters: rtpPPP
+					});
+				}
+			}
+		}
+	}
+
+	startproduce(){
+		this._producePipe.produce({
+			id: "test_produce",
+			kind: "video",
+			rtpParameters: rtpPPP
+		});
+		// for(const joinedPeer of joinedPeers){
+		// 	joinedPeer.
+		// }
+	}
 	pipe1stat(){
 		let stat = this._consumePipe.getStats();
 		logger.info("%s", stat);
 	}
-	startpipe(){
-		this.producePipe = this._mediasoupRouter.createPipeTransport({listenIp:"127.0.0.1"});
-		request('http://127.0.0.1:5000/createpipe?pipeport=' + this._consumePipe.tuple.localPort, function (error, response, body) {
-  			if (!error && response.statusCode == 200) {
-				this._consumePipe.connect({ip:"127.0.0.1", port});
-				let joinedPeers = this._getJoinedPeers;
-				for(const joinedPeer of joinedPeers){
-					for (const producer of joinedPeer.data.producers.values()){
-						this._consumePipe.consume(
-							{
-								producerId      : producer.id,
-								rtpCapabilities : joinedPeer.data.rtpCapabilities,
-								paused          : true
-							});
-					}
-				}
-			}
-		})
-		return this._consumePipe.tuple.localPort;
-	}
+	// startpipe(){
+	// 	this.producePipe = this._mediasoupRouter.createPipeTransport({listenIp:"127.0.0.1"});
+	// 	request('http://127.0.0.1:5000/createpipe?pipeport=' + this._consumePipe.tuple.localPort, function (error, response, body) {
+  	// 		if (!error && response.statusCode == 200) {
+	// 			this._consumePipe.connect({ip:"127.0.0.1", port});
+	// 			let joinedPeers = this._getJoinedPeers;
+	// 			for(const joinedPeer of joinedPeers){
+	// 				for (const producer of joinedPeer.data.producers.values()){
+	// 					this._consumePipe.consume(
+	// 						{
+	// 							producerId      : producer.id,
+	// 							rtpCapabilities : joinedPeer.data.rtpCapabilities,
+	// 							paused          : true
+	// 						});
+	// 				}
+	// 			}
+	// 		}
+	// 	})
+	// 	return this._consumePipe.tuple.localPort;
+	// }
 	/**
 	 * Called from server.js upon a protoo WebSocket connection request from a
 	 * browser.
@@ -1087,7 +1113,7 @@ class Room extends EventEmitter
 				// Add peerId into appData to later get the associated Peer during
 				// the 'loudest' event of the audioLevelObserver.
 				appData = { ...appData, peerId: peer.id };
-
+				logger.info("DDDDDF %s", JSON.stringify(rtpParameters));
 				const producer = await transport.produce(
 					{
 						kind,
@@ -1617,6 +1643,7 @@ class Room extends EventEmitter
 
 		try
 		{
+			logger.info("DDDDD %s", JSON.stringify(consumerPeer.data.rtpCapabilities));
 			consumer = await transport.consume(
 				{
 					producerId      : producer.id,
