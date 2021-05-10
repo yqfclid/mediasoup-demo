@@ -333,7 +333,7 @@ class Room extends EventEmitter
 			await joinedPeer.request(
 				'newConsumer',
 				{
-					peerId         : "12345",
+					peerId         : "remote-yqfclid",
 					producerId     : producer.id,
 					id             : consumer.id,
 					kind           : consumer.kind,
