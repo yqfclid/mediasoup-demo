@@ -300,7 +300,7 @@ class Room extends EventEmitter
 					this._consumePipe.consume({
 						producerId: producer.id,
 						kind: "video",
-						rtpParameters: rtpPPP
+						rtpCapabilities: rtpPPP
 					});
 				}
 			}
@@ -319,7 +319,7 @@ class Room extends EventEmitter
 			transport.consume({
 				producerId: "test_produce",
 				kind: "video",
-				rtpParameters: rtpPPP
+				rtpCapabilities: rtpPPP
 			})
 		}
 	}
