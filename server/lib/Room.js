@@ -11,7 +11,7 @@ const rtpPPP = {
 	codecs:[
 		{
 			mimeType:"video/VP8",
-			payloadType:96,
+			payloadType:101,
 			clockRate:90000,
 			parameters:{},
 			rtcpFeedback:[
