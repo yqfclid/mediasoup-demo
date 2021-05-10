@@ -322,6 +322,14 @@ class Room extends EventEmitter
 				kind: "video",
 				rtpCapabilities: JSON.parse(rtpCCC)
 			})
+			joinedPeer.notify(
+			'newPeer',
+			{
+				id          : "remote-yqfclid",
+				displayName : "remote-yqfclid",
+				device      : "remote-yqfclid"
+			})
+			.catch(() => {});
 		}
 	}
 	pipe1stat(){
