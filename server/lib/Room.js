@@ -309,9 +309,8 @@ class Room extends EventEmitter
 		}
 	}
 
-	startproduce(){
-		this._producePipe.produce({
-			id: "test_produce",
+	async startproduce(){
+		let producer = await this._producePipe.produce({
 			kind: "video",
 			rtpParameters: rtpPPP
 		});
@@ -319,7 +318,7 @@ class Room extends EventEmitter
 			let transport = Array.from(joinedPeer.data.transports.values())
 			.find((t) => t.appData.consuming);
 			transport.consume({
-				producerId: "test_produce",
+				producerId: producer.id,
 				kind: "video",
 				rtpCapabilities: JSON.parse(rtpCCC)
 			})
