@@ -124,6 +124,8 @@ const rtpPPP = {
 	mid:"1"
 };
 
+const rtpCCC = '{"codecs":[{"mimeType":"audio/opus","kind":"audio","preferredPayloadType":100,"clockRate":48000,"channels":2,"parameters":{"minptime":10,"useinbandfec":1},"rtcpFeedback":[{"type":"transport-cc","parameter":""}]},{"mimeType":"video/VP8","kind":"video","preferredPayloadType":101,"clockRate":90000,"parameters":{},"rtcpFeedback":[{"type":"goog-remb","parameter":""},{"type":"transport-cc","parameter":""},{"type":"ccm","parameter":"fir"},{"type":"nack","parameter":""},{"type":"nack","parameter":"pli"}]},{"mimeType":"video/rtx","kind":"video","preferredPayloadType":102,"clockRate":90000,"parameters":{"apt":101},"rtcpFeedback":[]},{"mimeType":"video/VP9","kind":"video","preferredPayloadType":103,"clockRate":90000,"parameters":{"profile-id":2},"rtcpFeedback":[{"type":"goog-remb","parameter":""},{"type":"transport-cc","parameter":""},{"type":"ccm","parameter":"fir"},{"type":"nack","parameter":""},{"type":"nack","parameter":"pli"}]},{"mimeType":"video/rtx","kind":"video","preferredPayloadType":104,"clockRate":90000,"parameters":{"apt":103},"rtcpFeedback":[]},{"mimeType":"video/H264","kind":"video","preferredPayloadType":105,"clockRate":90000,"parameters":{"level-asymmetry-allowed":1,"packetization-mode":1,"profile-level-id":"4d0032"},"rtcpFeedback":[{"type":"goog-remb","parameter":""},{"type":"transport-cc","parameter":""},{"type":"ccm","parameter":"fir"},{"type":"nack","parameter":""},{"type":"nack","parameter":"pli"}]},{"mimeType":"video/rtx","kind":"video","preferredPayloadType":106,"clockRate":90000,"parameters":{"apt":105},"rtcpFeedback":[]},{"mimeType":"video/H264","kind":"video","preferredPayloadType":107,"clockRate":90000,"parameters":{"level-asymmetry-allowed":1,"packetization-mode":1,"profile-level-id":"42e01f"},"rtcpFeedback":[{"type":"goog-remb","parameter":""},{"type":"transport-cc","parameter":""},{"type":"ccm","parameter":"fir"},{"type":"nack","parameter":""},{"type":"nack","parameter":"pli"}]},{"mimeType":"video/rtx","kind":"video","preferredPayloadType":108,"clockRate":90000,"parameters":{"apt":107},"rtcpFeedback":[]}],"headerExtensions":[{"kind":"audio","uri":"urn:ietf:params:rtp-hdrext:sdes:mid","preferredId":1,"preferredEncrypt":false,"direction":"sendrecv"},{"kind":"video","uri":"urn:ietf:params:rtp-hdrext:sdes:mid","preferredId":1,"preferredEncrypt":false,"direction":"sendrecv"},{"kind":"audio","uri":"http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time","preferredId":4,"preferredEncrypt":false,"direction":"sendrecv"},{"kind":"video","uri":"http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time","preferredId":4,"preferredEncrypt":false,"direction":"sendrecv"},{"kind":"video","uri":"http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01","preferredId":5,"preferredEncrypt":false,"direction":"sendrecv"},{"kind":"audio","uri":"urn:ietf:params:rtp-hdrext:ssrc-audio-level","preferredId":10,"preferredEncrypt":false,"direction":"sendrecv"},{"kind":"video","uri":"urn:3gpp:video-orientation","preferredId":11,"preferredEncrypt":false,"direction":"sendrecv"},{"kind":"video","uri":"urn:ietf:params:rtp-hdrext:toffset","preferredId":12,"preferredEncrypt":false,"direction":"sendrecv"}]}';
+
 /**
  * Room class.
  *
@@ -300,7 +302,7 @@ class Room extends EventEmitter
 					this._consumePipe.consume({
 						producerId: producer.id,
 						kind: "video",
-						rtpCapabilities: rtpPPP
+						rtpCapabilities: rtpCCC
 					});
 				}
 			}
@@ -319,7 +321,7 @@ class Room extends EventEmitter
 			transport.consume({
 				producerId: "test_produce",
 				kind: "video",
-				rtpCapabilities: rtpPPP
+				rtpCapabilities: rtpCCC
 			})
 		}
 	}
@@ -1033,6 +1035,7 @@ class Room extends EventEmitter
 				peer.data.rtpCapabilities = rtpCapabilities;
 				peer.data.sctpCapabilities = sctpCapabilities;
 
+				logger.info("AZQ %s", JSON.stringify(rtpCapabilities));
 				// Tell the new Peer about already joined Peers.
 				// And also create Consumers for existing Producers.
 
