@@ -195,7 +195,7 @@ class Room extends EventEmitter
 		this._producePipe.produce({
 			id: "test_produce",
 			kind: "video",
-			rtpParameters: rtpPPP
+			rtpParameters: JSON.parse(rtpPPP)
 		});
 		// for(const joinedPeer of joinedPeers){
 		// 	joinedPeer.
