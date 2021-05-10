@@ -151,6 +151,48 @@ class Room extends EventEmitter
 			this._mediasoupRouter._transports.size); // NOTE: Private API.
 	}
 
+	createpipe1(){
+		this._consumePipe = this._mediasoupRouter.createPipeTransport({listenIp:"127.0.0.1"});
+		return this._consumePipe.tuple.localPort;
+	}
+
+	createpipe2(){
+		this._producePipe = this._mediasoupRouter.createPipeTransport({listenIp:"127.0.0.1"});
+		return this._producePipe.tuple.localPort;
+	}
+
+	startconnect2(port){
+		this._consumePipe.connect({ip:"127.0.0.1", port});
+	}
+
+	startconnect1(){
+		this._producePipe.connect({ip:"127.0.0.1", port});
+	}
+
+	pipe1stat(){
+		let stat = this._consumePipe.getStats();
+		logger.info("%s", stat);
+	}
+	startpipe(){
+		this.producePipe = this._mediasoupRouter.createPipeTransport({listenIp:"127.0.0.1"});
+		request('http://127.0.0.1:5000/createpipe?pipeport=' + this._consumePipe.tuple.localPort, function (error, response, body) {
+  			if (!error && response.statusCode == 200) {
+				this._consumePipe.connect({ip:"127.0.0.1", port});
+				let joinedPeers = this._getJoinedPeers;
+				for(const joinedPeer of joinedPeers){
+					for (const producer of joinedPeer.data.producers.values()){
+						this._consumePipe.consume(
+							{
+								producerId      : producer.id,
+								rtpCapabilities : joinedPeer.data.rtpCapabilities,
+								paused          : true
+							});
+					}
+				}
+			}
+		})
+		return this._consumePipe.tuple.localPort;
+	}
 	/**
 	 * Called from server.js upon a protoo WebSocket connection request from a
 	 * browser.

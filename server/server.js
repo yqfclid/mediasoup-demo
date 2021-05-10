@@ -22,6 +22,8 @@ const Logger = require('./lib/Logger');
 const Room = require('./lib/Room');
 const interactiveServer = require('./lib/interactiveServer');
 const interactiveClient = require('./lib/interactiveClient');
+const { PipeTransport } = require('mediasoup/lib/PipeTransport');
+const http = require("http");
 
 const logger = new Logger();
 
@@ -75,6 +77,9 @@ async function run()
 
 	// Run a protoo WebSocketServer.
 	await runProtooWebSocketServer();
+
+	await runHttpServer();
+	await runHttpServer2();
 
 	// Log rooms status every X seconds.
 	setInterval(() =>
@@ -531,4 +536,55 @@ async function getOrCreateRoom({ roomId })
 	}
 
 	return room;
+}
+
+async function runHttpServer(){
+	const httpServer = http.createServer();
+	httpServer.on("request", function(req, res) {
+		const u = url.parse(req.url, true);
+		const remotePort = u.query['pipeport'];
+		if(u.pathname === "/createpipe1"){
+			let room = rooms.get("123456");
+			let port = room.createpipe1()
+			res.end(port);
+		}
+		if(u.pathname === "/startconnect1"){
+			let room = rooms.get("123456");
+			let port = room.startconnect1(remotePort)
+			res.end("ok");
+		}
+		if(u.pathname === "/stat"){
+			let room = rooms.get("123456");
+			room.pipe1stat()
+			res.end("ok");
+		}
+		
+	});
+	await new Promise((resolve) =>
+	{
+		httpServer.listen(5000, "127.0.0.1", resolve);
+	});
+}
+
+
+async function runHttpServer2(){
+	const httpServer = http.createServer();
+	httpServer.on("request", function(req, res) {
+		const u = url.parse(req.url, true);
+		const remotePort = u.query['pipeport'];
+		if(u.pathname === "/createpipe2"){
+			let room = rooms.get("123456");
+			let port = room.createpipe2()
+			res.end(port);
+		}
+		if(u.pathname === "/startconnect2"){
+			let room = rooms.get("123456");
+			let port = room.startconnect2(remotePort)
+			res.end("ok");
+		}
+	});
+	await new Promise((resolve) =>
+	{
+		httpServer.listen(5000, "127.0.0.1", resolve);
+	});
 }
