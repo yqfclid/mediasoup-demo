@@ -169,12 +169,12 @@ class Room extends EventEmitter
 	}
 
 	startconnect2(remoteport){
-		this._producePipe.connect({ip:"127.0.0.1", port:remoteport});
+		this._producePipe.connect({ip:"127.0.0.1", port: Number(remoteport)});
 	}
 
 	startconnect1(remoteport){
 		logger.info("1234 %s", this._producePipe);
-		this._consumePipe.connect({ip:"127.0.0.1", port:remoteport});
+		this._consumePipe.connect({ip:"127.0.0.1", port: Number(remoteport)});
 	}
 
 	startconsume(){
