@@ -7,7 +7,7 @@ const Bot = require('./Bot');
 
 const logger = new Logger('Room');
 
-const rtpPPP = '{"codecs":[{"mimeType":"video/VP8","payloadType":96,"clockRate":90000,"parameters":{},"rtcpFeedback":[{"type":"goog-remb","parameter":""},{"type":"transport-cc","parameter":""},{"type":"ccm","parameter":"fir"},{"type":"nack","parameter":""},{"type":"nack","parameter":"pli"}]},{"mimeType":"video/rtx","payloadType":97,"clockRate":90000,"parameters":{"apt":96},"rtcpFeedback":[]}],"headerExtensions":[{"uri":"urn:ietf:params:rtp-hdrext:sdes:mid","id":4,"encrypt":false,"parameters":{}},{"uri":"urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id","id":5,"encrypt":false,"parameters":{}},{"uri":"urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id","id":6,"encrypt":false,"parameters":{}},{"uri":"http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time","id":2,"encrypt":false,"parameters":{}},{"uri":"http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01","id":3,"encrypt":false,"parameters":{}},{"uri":"urn:3gpp:video-orientation","id":13,"encrypt":false,"parameters":{}},{"uri":"urn:ietf:params:rtp-hdrext:toffset","id":14,"encrypt":false,"parameters":{}}],"encodings":[{"active":true,"scaleResolutionDownBy":4,"maxBitrate":500000,"rid":"r0","scalabilityMode":"S1T3","dtx":false},{"active":true,"scaleResolutionDownBy":2,"maxBitrate":1000000,"rid":"r1","scalabilityMode":"S1T3","dtx":false},{"active":true,"scaleResolutionDownBy":1,"maxBitrate":5000000,"rid":"r2","scalabilityMode":"S1T3","dtx":false}],"rtcp":{"cname":"","reducedSize":true},"mid":"1"}';
+const rtpPPP = {"codecs":[{"mimeType":"video/VP8","payloadType":96,"clockRate":90000,"parameters":{},"rtcpFeedback":[{"type":"goog-remb","parameter":""},{"type":"transport-cc","parameter":""},{"type":"ccm","parameter":"fir"},{"type":"nack","parameter":""},{"type":"nack","parameter":"pli"}]},{"mimeType":"video/rtx","payloadType":97,"clockRate":90000,"parameters":{"apt":96},"rtcpFeedback":[]}],"headerExtensions":[{"uri":"urn:ietf:params:rtp-hdrext:sdes:mid","id":4,"encrypt":false,"parameters":{}},{"uri":"urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id","id":5,"encrypt":false,"parameters":{}},{"uri":"urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id","id":6,"encrypt":false,"parameters":{}},{"uri":"http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time","id":2,"encrypt":false,"parameters":{}},{"uri":"http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01","id":3,"encrypt":false,"parameters":{}},{"uri":"urn:3gpp:video-orientation","id":13,"encrypt":false,"parameters":{}},{"uri":"urn:ietf:params:rtp-hdrext:toffset","id":14,"encrypt":false,"parameters":{}}],"encodings":[{"active":true,"scaleResolutionDownBy":4,"maxBitrate":500000,"rid":"r0","scalabilityMode":"S1T3","dtx":false},{"active":true,"scaleResolutionDownBy":2,"maxBitrate":1000000,"rid":"r1","scalabilityMode":"S1T3","dtx":false},{"active":true,"scaleResolutionDownBy":1,"maxBitrate":5000000,"rid":"r2","scalabilityMode":"S1T3","dtx":false}],"rtcp":{"cname":"","reducedSize":true},"mid":"1"};
 
 /**
  * Room class.
@@ -181,10 +181,11 @@ class Room extends EventEmitter
 		for(const joinedPeer of this._getJoinedPeers()){
 			for (const producer of joinedPeer.data.producers.values()){
 				if(producer.kind === "video"){
+					logger.info("ASDFF %s", producer);
 					this._consumePipe.consume({
-						id: producer.id,
+						producerId: producer.id,
 						kind: "video",
-						rtpParameters: JSON.parse(rtpPPP)
+						rtpParameters: rtpPPP
 					});
 				}
 			}
@@ -195,11 +196,17 @@ class Room extends EventEmitter
 		this._producePipe.produce({
 			id: "test_produce",
 			kind: "video",
-			rtpParameters: JSON.parse(rtpPPP)
+			rtpParameters: rtpPPP
 		});
-		// for(const joinedPeer of joinedPeers){
-		// 	joinedPeer.
-		// }
+		for(const joinedPeer of this._getJoinedPeers()){
+			let transport = Array.from(joinedPeer.data.transports.values())
+			.find((t) => t.appData.consuming);
+			transport.consume({
+				producerId: "test_produce",
+				kind: "video",
+				rtpParameters: rtpPPP
+			})
+		}
 	}
 	pipe1stat(){
 		let stat = this._consumePipe.getStats();
