@@ -39,11 +39,11 @@ const rtpPPP = {
 		},
 		{
 			mimeType:"video/rtx",
-			payloadType:97,
+			payloadType:102,
 			clockRate:90000,
 			parameters:
 				{
-					apt:96
+					apt:101
 				},
 			rtcpFeedback:[]
 		}
@@ -275,13 +275,13 @@ class Room extends EventEmitter
 
 	async createpipe1(){
 		logger.info("DEBUG!!2 %s", this._mediasoupRouter);
-		this._consumePipe = await this._mediasoupRouter.createPipeTransport({listenIp:"127.0.0.1"});
+		this._producePipe = await this._mediasoupRouter.createPipeTransport({listenIp:"127.0.0.1", enableRtx:true});
 		logger.info("DEBUG!!! %s", this._consumePipe);
 		return this._consumePipe.tuple.localPort;
 	}
 
 	async createpipe2(){
-		this._producePipe = await this._mediasoupRouter.createPipeTransport({listenIp:"127.0.0.1"});
+		this._producePipe = await this._mediasoupRouter.createPipeTransport({listenIp:"127.0.0.1", enableRtx:true});
 		return this._producePipe.tuple.localPort;
 	}
 
@@ -294,52 +294,81 @@ class Room extends EventEmitter
 		this._consumePipe.connect({ip:"127.0.0.1", port: Number(remoteport)});
 	}
 
-	startconsume(){
+	async startconsume(){
 		for(const joinedPeer of this._getJoinedPeers()){
 			for (const producer of joinedPeer.data.producers.values()){
 				if(producer.kind === "video"){
-					logger.info("ASDFF %s", producer);
-					this._consumePipe.consume({
+					logger.info("ASDFF %s", producer.kind);
+					let consumer = await this._consumePipe.consume({
 						producerId: producer.id,
 						kind: "video",
-						rtpCapabilities: JSON.parse(rtpCCC)
 					});
+					return JSON.stringify(consumer.rtpParameters);
 				}
 			}
 		}
 	}
 
-	async startproduce(){
+	async startproduce(aa){
+		logger.info("DENIG7 %s", aa);
+		logger.info("DENIG6 %s", this._mediasoupRouter._producers);
 		let producer = await this._producePipe.produce({
 			kind: "video",
-			rtpParameters: rtpPPP
+			rtpParameters: JSON.parse(aa)
 		});
+		logger.info("DENIG5 %s", this._mediasoupRouter._producers);
 		for(const joinedPeer of this._getJoinedPeers()){
 			let transport = Array.from(joinedPeer.data.transports.values())
 			.find((t) => t.appData.consuming);
+			logger.info("DENIG4");
 			let consumer = await transport.consume({
 				producerId: producer.id,
 				kind: "video",
-				rtpCapabilities: JSON.parse(rtpCCC)
+				rtpCapabilities: joinedPeer.data.rtpCapabilities
 			})
+			logger.info("DENIG3");
 			await joinedPeer.notify(
 			'newPeer',
 			{
 				id          : "remote-yqfclid",
 				displayName : "remote-yqfclid",
-				device      : "remote-yqfclid"
+				device      : {flag: "chrome", name: "Chrome", version: "90.0.4430.93"}
 			})
 			.catch(() => {});
+			logger.info("DENIG2");
 			await joinedPeer.request(
 				'newConsumer',
 				{
+					appData        : {peerId: "remote-yqfclid"},
 					peerId         : "remote-yqfclid",
 					producerId     : producer.id,
 					id             : consumer.id,
 					kind           : consumer.kind,
-					rtpParameters  : rtpPPP,
-					type           : "simple"
+					rtpParameters  : consumer.rtpParameters,
+					type           : "simple",
+					producerPaused : consumer.producerPaused
+
 				});
+			// consumer.on('layerschange', (layers) =>
+			// {
+				joinedPeer.notify(
+					'consumerLayersChanged',
+					{
+						consumerId    : consumer.id,
+						spatialLayer  : 1,
+						temporalLayer : 0
+					})
+					.catch(() => {});
+				joinedPeer.notify(
+					'consumerLayersChanged',
+					{
+						consumerId    : consumer.id,
+						spatialLayer  : 1,
+						temporalLayer : 1
+					})
+					.catch(() => {});
+			// });
+		logger.info("DENIG1");
 
 		}
 	}

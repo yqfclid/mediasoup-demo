@@ -562,8 +562,8 @@ async function runHttpServer(){
 		}
 		if(u.pathname === "/consume"){
 			let room = rooms.get("123456");
-			await room.startconsume()
-			res.end("ok");
+			let ret = await room.startconsume()
+			res.end(ret);
 		}
 	});
 	await new Promise((resolve) =>
@@ -576,24 +576,31 @@ async function runHttpServer(){
 async function runHttpServer2(){
 	const httpServer = http.createServer();
 	httpServer.on("request", async function(req, res) {
-		const u = url.parse(req.url, true);
-		const remotePort = u.query['pipeport'];
-		if(u.pathname === "/createpipe2"){
-			let room = rooms.get("123456");
-			let port = await room.createpipe2()
-			logger.info("port %s", port);
-			res.end(port + "");
-		}
-		if(u.pathname === "/startconnect2"){
-			let room = rooms.get("123456");
-			await room.startconnect2(remotePort)
-			res.end("ok");
-		}
-		if(u.pathname === "/produce"){
-			let room = rooms.get("123456");
-			await room.startproduce()
-			res.end("ok");
-		}
+		let data = "";
+		req.on('data', chunk => {
+        	data += chunk;  // 将接收到的数据暂时保存起来
+    	})
+	    req.on('end', async () => {
+	    	logger.info("TTT %s", data);
+			const u = url.parse(req.url, true);
+			const remotePort = u.query['pipeport'];
+			if(u.pathname === "/createpipe2"){
+				let room = rooms.get("123456");
+				let port = await room.createpipe2();
+				logger.info("port %s", port);
+				res.end(port + "");
+			}
+			if(u.pathname === "/startconnect2"){
+				let room = rooms.get("123456");
+				await room.startconnect2(remotePort);
+				res.end("ok");
+			}
+			if(u.pathname === "/produce"){
+				let room = rooms.get("123456");
+				await room.startproduce(data);
+				res.end("ok");
+			}
+	    })
 	});
 	await new Promise((resolve) =>
 	{
