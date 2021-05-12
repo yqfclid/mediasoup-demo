@@ -304,7 +304,7 @@ class Room extends EventEmitter
 						producerId: producer.id,
 						kind: "video",
 					});
-					rtpParameterss.push(rtpParameters);
+					rtpParameterss.push(consumer.rtpParameters);
 				}
 			}
 		}
@@ -312,7 +312,7 @@ class Room extends EventEmitter
 	}
 
 	async startproduce(aas){
-		logger.info("DENIG7 %s", aa);
+		logger.info("DENIG7 %s", aas);
 		logger.info("DENIG6 %s", this._mediasoupRouter._producers);
 		let i = 0;
 		for(const aa of JSON.parse(aas)){
