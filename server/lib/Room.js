@@ -321,7 +321,7 @@ class Room extends EventEmitter
 		let i;
 		let aas = JSON.parse(aasb);
 		for(i = 0; i < aas.length; i++){
-			let aa = ass[i];
+			let aa = aas[i];
 			for(const key in aa){
 				if(key === "video"){
 					let producer = await this._producePipe.produce({
