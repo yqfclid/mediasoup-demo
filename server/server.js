@@ -78,8 +78,8 @@ async function run()
 	// Run a protoo WebSocketServer.
 	await runProtooWebSocketServer();
 
-	await runHttpServer();
-	// await runHttpServer2();
+	//await runHttpServer();
+	 await runHttpServer2();
 
 	// Log rooms status every X seconds.
 	setInterval(() =>
