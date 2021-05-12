@@ -384,12 +384,12 @@ class Room extends EventEmitter
 						logger.info("DENIG1");
 					}
 					if(key === "audio"){
+						logger.info("ASDF %s", aa[key]);
 						let producer = await this._producePipe.produce({
 							kind: "audio",
 							rtpParameters: aa[key]
 						});
 						let Pid = "remote-yqfclid" + i;
-						logger.info("DENIG5 %s", this._mediasoupRouter._producers);
 						for(const joinedPeer of this._getJoinedPeers()){
 							let transport = Array.from(joinedPeer.data.transports.values())
 							.find((t) => t.appData.consuming);
