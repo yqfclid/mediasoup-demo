@@ -442,6 +442,7 @@ class Room extends EventEmitter
 									.catch(() => {});
 							// });
 							logger.info("DENIG1");
+						}	
 					}
 				}
 			}
