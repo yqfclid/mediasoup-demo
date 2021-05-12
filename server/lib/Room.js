@@ -381,7 +381,67 @@ class Room extends EventEmitter
 								})
 								.catch(() => {});
 						// });
-					logger.info("DENIG1");
+						logger.info("DENIG1");
+					}
+					if(key === "audio"){
+						let producer = await this._producePipe.produce({
+							kind: "audio",
+							rtpParameters: aa[key]
+						});
+						let Pid = "remote-yqfclid" + i;
+						logger.info("DENIG5 %s", this._mediasoupRouter._producers);
+						for(const joinedPeer of this._getJoinedPeers()){
+							let transport = Array.from(joinedPeer.data.transports.values())
+							.find((t) => t.appData.consuming);
+							logger.info("DENIG4");
+							let consumer = await transport.consume({
+								producerId: producer.id,
+								kind: "audio",
+								rtpCapabilities: joinedPeer.data.rtpCapabilities
+							})
+							logger.info("DENIG3");
+							await joinedPeer.notify(
+							'newPeer',
+							{
+								id          : Pid,
+								displayName : Pid,
+								device      : {flag: "chrome", name: "Chrome", version: "90.0.4430.93"}
+							})
+							.catch(() => {});
+							logger.info("DENIG2");
+							await joinedPeer.request(
+								'newConsumer',
+								{
+									appData        : {peerId: Pid},
+									peerId         : Pid,
+									producerId     : producer.id,
+									id             : consumer.id,
+									kind           : consumer.kind,
+									rtpParameters  : consumer.rtpParameters,
+									type           : "simple",
+									producerPaused : consumer.producerPaused
+				
+								});
+							// consumer.on('layerschange', (layers) =>
+							// {
+								joinedPeer.notify(
+									'consumerLayersChanged',
+									{
+										consumerId    : consumer.id,
+										spatialLayer  : 1,
+										temporalLayer : 0
+									})
+									.catch(() => {});
+								joinedPeer.notify(
+									'consumerLayersChanged',
+									{
+										consumerId    : consumer.id,
+										spatialLayer  : 1,
+										temporalLayer : 1
+									})
+									.catch(() => {});
+							// });
+							logger.info("DENIG1");
 					}
 				}
 			}
