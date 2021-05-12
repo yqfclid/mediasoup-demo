@@ -316,7 +316,7 @@ class Room extends EventEmitter
 	}
 
 	async startproduce(aasb){
-		logger.info("DENIG7 %s", aas);
+		logger.info("DENIG7 %s", aasb);
 		logger.info("DENIG6 %s", this._mediasoupRouter._producers);
 		let i;
 		let aas = JSON.parse(aasb);
