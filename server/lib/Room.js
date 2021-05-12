@@ -315,11 +315,12 @@ class Room extends EventEmitter
 		return JSON.stringify(aas);
 	}
 
-	async startproduce(aas){
+	async startproduce(aasb){
 		logger.info("DENIG7 %s", aas);
 		logger.info("DENIG6 %s", this._mediasoupRouter._producers);
 		let i;
-		for(i = 0; i < JSON.parse(aas).length; i++){
+		let aas = JSON.parse(aas);
+		for(i = 0; i < aas.length; i++){
 			let aa = ass[i];
 			for(const key in aa){
 				if(key === "video"){
