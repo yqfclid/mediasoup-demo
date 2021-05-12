@@ -275,7 +275,7 @@ class Room extends EventEmitter
 
 	async createpipe1(){
 		logger.info("DEBUG!!2 %s", this._mediasoupRouter);
-		this._producePipe = await this._mediasoupRouter.createPipeTransport({listenIp:"127.0.0.1", enableRtx:true});
+		this._consumePipe = await this._mediasoupRouter.createPipeTransport({listenIp:"127.0.0.1", enableRtx:true});
 		logger.info("DEBUG!!! %s", this._consumePipe);
 		return this._consumePipe.tuple.localPort;
 	}
