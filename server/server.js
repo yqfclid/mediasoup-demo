@@ -79,7 +79,7 @@ async function run()
 	await runProtooWebSocketServer();
 
 	await runHttpServer();
-	// await runHttpServer2();
+	await runHttpServer2();
 
 	// Log rooms status every X seconds.
 	setInterval(() =>
@@ -604,6 +604,6 @@ async function runHttpServer2(){
 	});
 	await new Promise((resolve) =>
 	{
-		httpServer.listen(5000, "127.0.0.1", resolve);
+		httpServer.listen(5002, "127.0.0.1", resolve);
 	});
 }
