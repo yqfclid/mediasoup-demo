@@ -442,6 +442,12 @@ class Room extends EventEmitter
 								})
 								.catch(() => {});
 						// });
+							joinedPeer.notify(
+								'activeSpeaker',
+								{
+									peerId : Pid
+								})
+								.catch(() => {});
 						logger.info("DENIG1");
 					}	
 				}
