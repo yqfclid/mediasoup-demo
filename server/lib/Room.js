@@ -295,6 +295,7 @@ class Room extends EventEmitter
 	}
 
 	async startconsume(){
+		let rtpParameterss = [];
 		for(const joinedPeer of this._getJoinedPeers()){
 			for (const producer of joinedPeer.data.producers.values()){
 				if(producer.kind === "video"){
@@ -303,73 +304,79 @@ class Room extends EventEmitter
 						producerId: producer.id,
 						kind: "video",
 					});
-					return JSON.stringify(consumer.rtpParameters);
+					rtpParameterss.push(rtpParameters);
 				}
 			}
 		}
+		return JSON.stringify(rtpParameterss);
 	}
 
-	async startproduce(aa){
+	async startproduce(aas){
 		logger.info("DENIG7 %s", aa);
 		logger.info("DENIG6 %s", this._mediasoupRouter._producers);
-		let producer = await this._producePipe.produce({
-			kind: "video",
-			rtpParameters: JSON.parse(aa)
-		});
-		logger.info("DENIG5 %s", this._mediasoupRouter._producers);
-		for(const joinedPeer of this._getJoinedPeers()){
-			let transport = Array.from(joinedPeer.data.transports.values())
-			.find((t) => t.appData.consuming);
-			logger.info("DENIG4");
-			let consumer = await transport.consume({
-				producerId: producer.id,
+		let i = 0;
+		for(const aa of JSON.parse(aas)){
+			let producer = await this._producePipe.produce({
 				kind: "video",
-				rtpCapabilities: joinedPeer.data.rtpCapabilities
-			})
-			logger.info("DENIG3");
-			await joinedPeer.notify(
-			'newPeer',
-			{
-				id          : "remote-yqfclid",
-				displayName : "remote-yqfclid",
-				device      : {flag: "chrome", name: "Chrome", version: "90.0.4430.93"}
-			})
-			.catch(() => {});
-			logger.info("DENIG2");
-			await joinedPeer.request(
-				'newConsumer',
+				rtpParameters: aa
+			});
+			let Pid = "remote-yqfclid" + i;
+			logger.info("DENIG5 %s", this._mediasoupRouter._producers);
+			for(const joinedPeer of this._getJoinedPeers()){
+				let transport = Array.from(joinedPeer.data.transports.values())
+				.find((t) => t.appData.consuming);
+				logger.info("DENIG4");
+				let consumer = await transport.consume({
+					producerId: producer.id,
+					kind: "video",
+					rtpCapabilities: joinedPeer.data.rtpCapabilities
+				})
+				logger.info("DENIG3");
+				await joinedPeer.notify(
+				'newPeer',
 				{
-					appData        : {peerId: "remote-yqfclid"},
-					peerId         : "remote-yqfclid",
-					producerId     : producer.id,
-					id             : consumer.id,
-					kind           : consumer.kind,
-					rtpParameters  : consumer.rtpParameters,
-					type           : "simple",
-					producerPaused : consumer.producerPaused
-
-				});
-			// consumer.on('layerschange', (layers) =>
-			// {
-				joinedPeer.notify(
-					'consumerLayersChanged',
+					id          : Pid,
+					displayName : Pid,
+					device      : {flag: "chrome", name: "Chrome", version: "90.0.4430.93"}
+				})
+				.catch(() => {});
+				logger.info("DENIG2");
+				await joinedPeer.request(
+					'newConsumer',
 					{
-						consumerId    : consumer.id,
-						spatialLayer  : 1,
-						temporalLayer : 0
-					})
-					.catch(() => {});
-				joinedPeer.notify(
-					'consumerLayersChanged',
-					{
-						consumerId    : consumer.id,
-						spatialLayer  : 1,
-						temporalLayer : 1
-					})
-					.catch(() => {});
-			// });
-		logger.info("DENIG1");
-
+						appData        : {peerId: Pid},
+						peerId         : Pid,
+						producerId     : producer.id,
+						id             : consumer.id,
+						kind           : consumer.kind,
+						rtpParameters  : consumer.rtpParameters,
+						type           : "simple",
+						producerPaused : consumer.producerPaused
+	
+					});
+				// consumer.on('layerschange', (layers) =>
+				// {
+					joinedPeer.notify(
+						'consumerLayersChanged',
+						{
+							consumerId    : consumer.id,
+							spatialLayer  : 1,
+							temporalLayer : 0
+						})
+						.catch(() => {});
+					joinedPeer.notify(
+						'consumerLayersChanged',
+						{
+							consumerId    : consumer.id,
+							spatialLayer  : 1,
+							temporalLayer : 1
+						})
+						.catch(() => {});
+				// });
+			logger.info("DENIG1");
+	
+			}
+			i++;
 		}
 	}
 	pipe1stat(){
