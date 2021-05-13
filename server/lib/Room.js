@@ -333,21 +333,26 @@ class Room extends EventEmitter
 					for(const joinedPeer of this._getJoinedPeers()){
 						let transport = Array.from(joinedPeer.data.transports.values())
 						.find((t) => t.appData.consuming);
-						logger.info("DENIG4");
 						let consumer = await transport.consume({
 							producerId: producer.id,
 							kind: "video",
 							rtpCapabilities: joinedPeer.data.rtpCapabilities
 						})
-						logger.info("DENIG3");
-						await joinedPeer.notify(
-						'newPeer',
+						consumer.on('trace', (trace) =>
 						{
-							id          : Pid,
-							displayName : Pid,
-							device      : {flag: "chrome", name: "Chrome", version: "90.0.4430.93"}
-						})
-						.catch(() => {});
+							logger.debug(
+								'consumer "trace" event [producerId:%s, trace.type:%s, trace:%o]',
+								consumer.id, trace.type, trace);
+						});
+						logger.info("DENIG3333 %s", transport.id);
+						// await joinedPeer.notify(
+						// 'newPeer',
+						// {
+						// 	id          : Pid,
+						// 	displayName : Pid,
+						// 	device      : {flag: "chrome", name: "Chrome", version: "90.0.4430.93"}
+						// })
+						// .catch(() => {});
 						logger.info("DENIG2");
 						await joinedPeer.request(
 							'newConsumer',
@@ -385,22 +390,28 @@ class Room extends EventEmitter
 					}
 				}
 				if(key === "audio"){
+					let Pid = "remote-yqfclid" + i;
 					let producer = await this._producePipe.produce({
 						kind: "audio",
-						rtpParameters: aa[key]
+						rtpParameters: aa[key],
+						appData:  {peerId: Pid}
 					});
-					let Pid = "remote-yqfclid" + i;
-					logger.info("ASDF %s  %s", aa[key], Pid);
 					for(const joinedPeer of this._getJoinedPeers()){
 						let transport = Array.from(joinedPeer.data.transports.values())
 						.find((t) => t.appData.consuming);
-						logger.info("DENIG4");
+						logger.info("DENIG4 %s   %s", transport.id, joinedPeer.data.transports.values());
 						let consumer = await transport.consume({
 							producerId: producer.id,
 							kind: "audio",
 							rtpCapabilities: joinedPeer.data.rtpCapabilities
 						})
-						logger.info("DENIG3");
+						consumer.on('trace', (trace) =>
+						{
+							logger.debug(
+								'consumer "trace" event [producerId:%s, trace.type:%s, trace:%o]',
+								consumer.id, trace.type, trace);
+						});
+						logger.info("DENIG3	 %s", transport);
 						await joinedPeer.notify(
 						'newPeer',
 						{
@@ -409,7 +420,7 @@ class Room extends EventEmitter
 							device      : {flag: "chrome", name: "Chrome", version: "90.0.4430.93"}
 						})
 						.catch(() => {});
-						logger.info("DENIG2");
+						logger.info("DENIG2  %s", consumer.id);
 						await joinedPeer.request(
 							'newConsumer',
 							{
@@ -423,32 +434,16 @@ class Room extends EventEmitter
 								producerPaused : consumer.producerPaused
 			
 							});
-						// consumer.on('layerschange', (layers) =>
-						// {
-							joinedPeer.notify(
-								'consumerLayersChanged',
-								{
-									consumerId    : consumer.id,
-									spatialLayer  : 1,
-									temporalLayer : 0
-								})
-								.catch(() => {});
-							joinedPeer.notify(
-								'consumerLayersChanged',
-								{
-									consumerId    : consumer.id,
-									spatialLayer  : 1,
-									temporalLayer : 1
-								})
-								.catch(() => {});
-						// });
-							joinedPeer.notify(
-								'activeSpeaker',
-								{
-									peerId : Pid
-								})
-								.catch(() => {});
-						logger.info("DENIG1");
+							this._audioLevelObserver.addProducer({ producerId: producer.id })
+							.catch(() => {});
+							// joinedPeer.notify(
+							// 	'activeSpeaker',
+							// 	{
+							// 		peerId : Pid,
+							// 		volume : -50
+							// 	})
+							// 	.catch(() => {});
+						logger.info("ASDF %s  %s", aa[key], Pid);
 					}	
 				}
 			}
@@ -1098,6 +1093,7 @@ class Room extends EventEmitter
 		{
 			const { producer, volume } = volumes[0];
 
+			logger.info("SBSBSBSBS %s", producer.appData.peerId);
 			// logger.debug(
 			// 	'audioLevelObserver "volumes" event [producerId:%s, volume:%s]',
 			// 	producer.id, volume);
@@ -1889,7 +1885,7 @@ class Room extends EventEmitter
 		// Must take the Transport the remote Peer is using for consuming.
 		const transport = Array.from(consumerPeer.data.transports.values())
 			.find((t) => t.appData.consuming);
-
+		logger.info("DENIG45678 %s ", transport.id);
 		// This should not happen.
 		if (!transport)
 		{
