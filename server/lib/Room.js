@@ -7,125 +7,6 @@ const Bot = require('./Bot');
 
 const logger = new Logger('Room');
 
-const rtpPPP = {
-	codecs:[
-		{
-			mimeType:"video/VP8",
-			payloadType:101,
-			clockRate:90000,
-			parameters:{},
-			rtcpFeedback:[
-				{
-					type:"goog-remb",
-					parameter:""
-				},
-				{
-					type:"transport-cc",
-					parameter:""
-				},
-				{
-					type:"ccm",
-					parameter:"fir"
-				},
-				{
-					type:"nack",
-					parameter:""
-				},
-				{
-					type:"nack",
-					parameter:"pli"
-				}
-			]
-		},
-		{
-			mimeType:"video/rtx",
-			payloadType:102,
-			clockRate:90000,
-			parameters:
-				{
-					apt:101
-				},
-			rtcpFeedback:[]
-		}
-	],
-	headerExtensions:[
-		{
-			uri:"urn:ietf:params:rtp-hdrext:sdes:mid",
-			id:4,
-			encrypt:false,
-			parameters:{}
-		},
-		{
-			uri:"urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id",
-			id:5,
-			encrypt:false,"parameters":{}
-		},
-		{
-			uri:"urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id",
-			id:6,
-			encrypt:false,
-			parameters:{}
-		},
-		{
-			uri:"http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time",
-			id:2,
-			encrypt:false,
-			parameters:{}
-		},
-		{
-			uri:"http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01",
-			id:3,
-			encrypt:false,
-			parameters:{}
-		},
-		{
-			uri:"urn:3gpp:video-orientation",
-			id:13,
-			encrypt:false,
-			parameters:{}
-		},
-		{
-			uri:"urn:ietf:params:rtp-hdrext:toffset",
-			id:14,
-			encrypt:false,
-			parameters:{}
-		}
-	],
-	encodings:[
-		{
-			active:true,
-			scaleResolutionDownBy:4,
-			maxBitrate:500000,
-			rid:"r0",
-			scalabilityMode:"S1T3",
-			dtx:false
-		},
-		{
-			active:true,
-			scaleResolutionDownBy:2,
-			maxBitrate:1000000,
-			rid:"r1",
-			scalabilityMode:"S1T3",
-			dtx:false
-		},
-		{
-			active:true,
-			scaleResolutionDownBy:1,
-			maxBitrate:5000000,
-			rid:"r2",
-			scalabilityMode:"S1T3",
-			dtx:false
-		}
-	],
-	rtcp:{
-		cname:"",
-		reducedSize:true
-	},
-	mid:"1"
-};
-
-const rtpCCC = '{"codecs":[{"mimeType":"audio/opus","kind":"audio","preferredPayloadType":100,"clockRate":48000,"channels":2,"parameters":{"minptime":10,"useinbandfec":1},"rtcpFeedback":[{"type":"transport-cc","parameter":""}]},{"mimeType":"video/VP8","kind":"video","preferredPayloadType":101,"clockRate":90000,"parameters":{},"rtcpFeedback":[{"type":"goog-remb","parameter":""},{"type":"transport-cc","parameter":""},{"type":"ccm","parameter":"fir"},{"type":"nack","parameter":""},{"type":"nack","parameter":"pli"}]},{"mimeType":"video/rtx","kind":"video","preferredPayloadType":102,"clockRate":90000,"parameters":{"apt":101},"rtcpFeedback":[]},{"mimeType":"video/VP9","kind":"video","preferredPayloadType":103,"clockRate":90000,"parameters":{"profile-id":2},"rtcpFeedback":[{"type":"goog-remb","parameter":""},{"type":"transport-cc","parameter":""},{"type":"ccm","parameter":"fir"},{"type":"nack","parameter":""},{"type":"nack","parameter":"pli"}]},{"mimeType":"video/rtx","kind":"video","preferredPayloadType":104,"clockRate":90000,"parameters":{"apt":103},"rtcpFeedback":[]},{"mimeType":"video/H264","kind":"video","preferredPayloadType":105,"clockRate":90000,"parameters":{"level-asymmetry-allowed":1,"packetization-mode":1,"profile-level-id":"4d0032"},"rtcpFeedback":[{"type":"goog-remb","parameter":""},{"type":"transport-cc","parameter":""},{"type":"ccm","parameter":"fir"},{"type":"nack","parameter":""},{"type":"nack","parameter":"pli"}]},{"mimeType":"video/rtx","kind":"video","preferredPayloadType":106,"clockRate":90000,"parameters":{"apt":105},"rtcpFeedback":[]},{"mimeType":"video/H264","kind":"video","preferredPayloadType":107,"clockRate":90000,"parameters":{"level-asymmetry-allowed":1,"packetization-mode":1,"profile-level-id":"42e01f"},"rtcpFeedback":[{"type":"goog-remb","parameter":""},{"type":"transport-cc","parameter":""},{"type":"ccm","parameter":"fir"},{"type":"nack","parameter":""},{"type":"nack","parameter":"pli"}]},{"mimeType":"video/rtx","kind":"video","preferredPayloadType":108,"clockRate":90000,"parameters":{"apt":107},"rtcpFeedback":[]}],"headerExtensions":[{"kind":"audio","uri":"urn:ietf:params:rtp-hdrext:sdes:mid","preferredId":1,"preferredEncrypt":false,"direction":"sendrecv"},{"kind":"video","uri":"urn:ietf:params:rtp-hdrext:sdes:mid","preferredId":1,"preferredEncrypt":false,"direction":"sendrecv"},{"kind":"audio","uri":"http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time","preferredId":4,"preferredEncrypt":false,"direction":"sendrecv"},{"kind":"video","uri":"http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time","preferredId":4,"preferredEncrypt":false,"direction":"sendrecv"},{"kind":"video","uri":"http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01","preferredId":5,"preferredEncrypt":false,"direction":"sendrecv"},{"kind":"audio","uri":"urn:ietf:params:rtp-hdrext:ssrc-audio-level","preferredId":10,"preferredEncrypt":false,"direction":"sendrecv"},{"kind":"video","uri":"urn:3gpp:video-orientation","preferredId":11,"preferredEncrypt":false,"direction":"sendrecv"},{"kind":"video","uri":"urn:ietf:params:rtp-hdrext:toffset","preferredId":12,"preferredEncrypt":false,"direction":"sendrecv"}]}';
-
 /**
  * Room class.
  *
@@ -224,9 +105,13 @@ class Room extends EventEmitter
 		// @type {Boolean}
 		this._networkThrottled = false;
 
-		this._producePipe = undefined;
+		// used for linking remote room
+		this._RoomListener = {};
 
-		this._consumePipe = undefined;
+		this._RemotePeer = {};
+
+		this._RoomNotifyAddress = {}
+
 		// Handle audioLevelObserver.
 		this._handleAudioLevelObserver();
 
@@ -273,206 +158,137 @@ class Room extends EventEmitter
 			this._mediasoupRouter._transports.size); // NOTE: Private API.
 	}
 
-	async createpipe1(){
-		logger.info("DEBUG!!2 %s", this._mediasoupRouter);
-		this._consumePipe = await this._mediasoupRouter.createPipeTransport({listenIp:"127.0.0.1", enableRtx:true});
-		logger.info("DEBUG!!! %s", this._consumePipe);
-		return this._consumePipe.tuple.localPort;
+	/**
+	 * 建立pipetransport
+	 * @param {String} notifyAddress
+	 * @returns 
+	 */
+	async createPipe({notifyAddress}){
+		logger.info("room %s start create pipe for remote room link", this._roomId);
+		let remoteListenParam = {
+			listenIp: "0.0.0.0",
+			enableRtx: true,
+			appData: {type: "remote"}
+		}
+		let remoteRoomListenPipe = await this._mediasoupRouter.createPipeTransport(remoteListenParam);
+		this._RoomListener.set(remoteRoomListenPipe.id, remoteRoomListenPipe);
+		let localListenParam = {
+			listenIp: "0.0.0.0",
+			enableRtx: true,
+			appData: {type: "local"}
+		}
+		let localRoomListenPipe = await this._mediasoupRouter.createPipeTransport(localListenParam);
+		this._RoomListener.set(localRoomListenPipe.id, localRoomListenPipe);
+		this._RoomNotifyAddress = notifyAddress;
+		let ret = [{
+			pipeId: remoteRoomListenPipe.id,
+			port: remoteRoomListenPipe.tuple.localPort
+		},{
+			pipeId: localRoomListenPipe.id,
+			port: localRoomListenPipe.tuple.localPort
+		}];
+		return ret;
 	}
 
-	async createpipe2(){
-		this._producePipe = await this._mediasoupRouter.createPipeTransport({listenIp:"127.0.0.1", enableRtx:true});
-		return this._producePipe.tuple.localPort;
+	/**
+	 * pipetransport 建立连接
+	 * @param [{String, String}] connectParam 
+	 * @returns
+	 */
+	async connectRemoteRoom(connectParam){
+		logger.info("room %s start connect remote room %s", this._roomId, connectParam);
+		for(const pipeId in connectParam){
+			const remoteRoomListenPipe = this._remoteRoomListener[pipeId]
+			remoteRoomListenPipe.connect({ip: connectParam[pipeId].ip, port: connectParam[pipeId].port});
+		}
 	}
 
-	startconnect2(remoteport){
-		this._producePipe.connect({ip:"127.0.0.1", port: Number(remoteport)});
-	}
 
-	startconnect1(remoteport){
-		logger.info("1234 %s", this._producePipe);
-		this._consumePipe.connect({ip:"127.0.0.1", port: Number(remoteport)});
-	}
-
-	async startconsume(){
-		let aas = [];
-		for(const joinedPeer of this._getJoinedPeers()){
-			let aa = {};
-			for (const producer of joinedPeer.data.producers.values()){
-					let consumer = await this._consumePipe.consume({
+	/**
+	 * 
+	 * @param {} param0 
+	 * @returns 
+	 */
+	async linkRemoteRoom({transportId, params}){
+		logger.info("room %s start link room data ", this._roomId);
+		const pipeTransport = this._RoomListener[transportId];
+		let ret = {};
+		if(pipeTransport == undefined || pipeTransport.closed() || Params == {}){
+			return ret;
+		}
+		if(pipeTransport.appData.type == "remote"){
+			for(const PId in params){
+				for(const joinedPeer of this._getJoinedPeers()){
+					await joinedPeer.notify('newPeer',
+						{
+							id          : PId,
+							displayName : params[PId].data.displayName,
+							device      : params[PId].data.device
+						});
+				}
+				let remotePeerDatas = [];
+				for(const consumeData of Params[Pid]){
+					let peerProducer = await this._producePipe.produce({
+						kind: consumerData.kind,
+						rtpParameters: consumerData.rtpParameters
+					});
+					for(const joinedPeer of this._getJoinedPeers()){
+						let transport = Array.from(joinedPeer.data.transports.values())
+						.find((t) => t.appData.consuming);
+						let consumer = await transport.consume({
+							producerId: peerProducer.id,
+							kind: consumerData.kind,
+							rtpCapabilities: joinedPeer.data.rtpCapabilities
+						})
+						await joinedPeer.request(
+							'newConsumer',
+							{
+								appData        : {peerId: PId},
+								peerId         : PId,
+								producerId     : peerProducer.id,
+								id             : consumer.id,
+								kind           : peerProducer.kind,
+								rtpParameters  : consumerData.rtpParameters,
+								type           : "simple",
+								producerPaused : true
+			
+							});
+					}
+					remotePeerData = {
+						data: consumerData.data,
+						producer: peerProducer
+					};
+					remotePeerDatas.push(remotePeerData);
+				}
+				this._RemotePeer.set(PId, remotePeerDatas);
+			}
+			return ret;
+		}
+		if(pipeTransport.appData.type == "local"){
+			for(const joinedPeer of this._getJoinedPeers()){
+				let joinedPeerData = {
+					id: joinedPeer.id,
+					data: joinedPeer.data,
+					cosumers: []
+				};
+				for (const producer of joinedPeer.data.producers.values()){
+					let consumer = await pipeTransport.consume({
 						producerId: producer.id,
-						kind: "video"
+						paused: true
 					});
-					if(producer.kind === "video"){
-						aa.video = consumer.rtpParameters;
-					}
-					if(producer.kind === "audio"){
-						aa.audio = consumer.rtpParameters;
-					}
+					consumerData = {
+						rtpParameters: consumer.rtpParameters,
+						kind: producer.kind
+					};
+					joinedPeer.consumers.push(consumerData);
+				}
+				ret.set(joinedPeer.id, joinedPeerData);
 			}
-			aas.push(aa);
 		}
-		return JSON.stringify(aas);
+		return ret;
 	}
 
-	async startproduce(aasb){
-		logger.info("DENIG7 %s", aasb);
-		logger.info("DENIG6 %s", this._mediasoupRouter._producers);
-		let i;
-		let aas = JSON.parse(aasb);
-		for(i = 0; i < aas.length; i++){
-			let aa = aas[i];
-			for(const key in aa){
-				if(key === "video"){
-					let producer = await this._producePipe.produce({
-						kind: "video",
-						rtpParameters: aa[key]
-					});
-					let Pid = "remote-yqfclid" + i;
-					logger.info("DENIG5 %s", this._mediasoupRouter._producers);
-					for(const joinedPeer of this._getJoinedPeers()){
-						let transport = Array.from(joinedPeer.data.transports.values())
-						.find((t) => t.appData.consuming);
-						let consumer = await transport.consume({
-							producerId: producer.id,
-							kind: "video",
-							rtpCapabilities: joinedPeer.data.rtpCapabilities
-						})
-						consumer.on('trace', (trace) =>
-						{
-							logger.debug(
-								'consumer "trace" event [producerId:%s, trace.type:%s, trace:%o]',
-								consumer.id, trace.type, trace);
-						});
-						logger.info("DENIG3333 %s", transport.id);
-						// await joinedPeer.notify(
-						// 'newPeer',
-						// {
-						// 	id          : Pid,
-						// 	displayName : Pid,
-						// 	device      : {flag: "chrome", name: "Chrome", version: "90.0.4430.93"}
-						// })
-						// .catch(() => {});
-						logger.info("DENIG2");
-						await joinedPeer.request(
-							'newConsumer',
-							{
-								appData        : {peerId: Pid},
-								peerId         : Pid,
-								producerId     : producer.id,
-								id             : consumer.id,
-								kind           : consumer.kind,
-								rtpParameters  : consumer.rtpParameters,
-								type           : "simple",
-								producerPaused : consumer.producerPaused
-			
-							});
-						// consumer.on('layerschange', (layers) =>
-						// {
-							joinedPeer.notify(
-								'consumerLayersChanged',
-								{
-									consumerId    : consumer.id,
-									spatialLayer  : 1,
-									temporalLayer : 0
-								})
-								.catch(() => {});
-							joinedPeer.notify(
-								'consumerLayersChanged',
-								{
-									consumerId    : consumer.id,
-									spatialLayer  : 1,
-									temporalLayer : 1
-								})
-								.catch(() => {});
-						// });
-						logger.info("DENIG1");
-					}
-				}
-				if(key === "audio"){
-					let Pid = "remote-yqfclid" + i;
-					let producer = await this._producePipe.produce({
-						kind: "audio",
-						rtpParameters: aa[key],
-						appData:  {peerId: Pid}
-					});
-					for(const joinedPeer of this._getJoinedPeers()){
-						let transport = Array.from(joinedPeer.data.transports.values())
-						.find((t) => t.appData.consuming);
-						logger.info("DENIG4 %s   %s", transport.id, joinedPeer.data.transports.values());
-						let consumer = await transport.consume({
-							producerId: producer.id,
-							kind: "audio",
-							rtpCapabilities: joinedPeer.data.rtpCapabilities
-						})
-						consumer.on('trace', (trace) =>
-						{
-							logger.debug(
-								'consumer "trace" event [producerId:%s, trace.type:%s, trace:%o]',
-								consumer.id, trace.type, trace);
-						});
-						logger.info("DENIG3	 %s", transport);
-						await joinedPeer.notify(
-						'newPeer',
-						{
-							id          : Pid,
-							displayName : Pid,
-							device      : {flag: "chrome", name: "Chrome", version: "90.0.4430.93"}
-						})
-						.catch(() => {});
-						logger.info("DENIG2  %s", consumer.id);
-						await joinedPeer.request(
-							'newConsumer',
-							{
-								appData        : {peerId: Pid},
-								peerId         : Pid,
-								producerId     : producer.id,
-								id             : consumer.id,
-								kind           : consumer.kind,
-								rtpParameters  : consumer.rtpParameters,
-								type           : "simple",
-								producerPaused : consumer.producerPaused
-			
-							});
-							this._audioLevelObserver.addProducer({ producerId: producer.id })
-							.catch(() => {});
-							// joinedPeer.notify(
-							// 	'activeSpeaker',
-							// 	{
-							// 		peerId : Pid,
-							// 		volume : -50
-							// 	})
-							// 	.catch(() => {});
-						logger.info("ASDF %s  %s", aa[key], Pid);
-					}	
-				}
-			}
-		}
-	}
-	pipe1stat(){
-		let stat = this._consumePipe.getStats();
-		logger.info("%s", stat);
-	}
-	// startpipe(){
-	// 	this.producePipe = this._mediasoupRouter.createPipeTransport({listenIp:"127.0.0.1"});
-	// 	request('http://127.0.0.1:5000/createpipe?pipeport=' + this._consumePipe.tuple.localPort, function (error, response, body) {
-  	// 		if (!error && response.statusCode == 200) {
-	// 			this._consumePipe.connect({ip:"127.0.0.1", port});
-	// 			let joinedPeers = this._getJoinedPeers;
-	// 			for(const joinedPeer of joinedPeers){
-	// 				for (const producer of joinedPeer.data.producers.values()){
-	// 					this._consumePipe.consume(
-	// 						{
-	// 							producerId      : producer.id,
-	// 							rtpCapabilities : joinedPeer.data.rtpCapabilities,
-	// 							paused          : true
-	// 						});
-	// 				}
-	// 			}
-	// 		}
-	// 	})
-	// 	return this._consumePipe.tuple.localPort;
-	// }
+
 	/**
 	 * Called from server.js upon a protoo WebSocket connection request from a
 	 * browser.
@@ -1093,7 +909,6 @@ class Room extends EventEmitter
 		{
 			const { producer, volume } = volumes[0];
 
-			logger.info("SBSBSBSBS %s", producer.appData.peerId);
 			// logger.debug(
 			// 	'audioLevelObserver "volumes" event [producerId:%s, volume:%s]',
 			// 	producer.id, volume);
@@ -1160,7 +975,6 @@ class Room extends EventEmitter
 				peer.data.rtpCapabilities = rtpCapabilities;
 				peer.data.sctpCapabilities = sctpCapabilities;
 
-				logger.info("AZQ %s", JSON.stringify(rtpCapabilities));
 				// Tell the new Peer about already joined Peers.
 				// And also create Consumers for existing Producers.
 
@@ -1369,7 +1183,6 @@ class Room extends EventEmitter
 				// Add peerId into appData to later get the associated Peer during
 				// the 'loudest' event of the audioLevelObserver.
 				appData = { ...appData, peerId: peer.id };
-				logger.info("DDDDDF %s", JSON.stringify(rtpParameters));
 				const producer = await transport.produce(
 					{
 						kind,
@@ -1885,7 +1698,7 @@ class Room extends EventEmitter
 		// Must take the Transport the remote Peer is using for consuming.
 		const transport = Array.from(consumerPeer.data.transports.values())
 			.find((t) => t.appData.consuming);
-		logger.info("DENIG45678 %s ", transport.id);
+
 		// This should not happen.
 		if (!transport)
 		{
@@ -1899,7 +1712,6 @@ class Room extends EventEmitter
 
 		try
 		{
-			logger.info("DDDDD %s", JSON.stringify(consumerPeer.data.rtpCapabilities));
 			consumer = await transport.consume(
 				{
 					producerId      : producer.id,
