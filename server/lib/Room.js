@@ -1348,7 +1348,7 @@ class Room extends EventEmitter
 		logger.info("room %s pipe %s consume local", this._roomId, pipeId);
 		let ret = {
 			success: false,
-			peerOpt : []
+			peerOpts : []
 		};
 		const pipeTransport = this._RoomPipes[pipeId];
 		if(pipeTransport === undefined 
@@ -1398,9 +1398,9 @@ class Room extends EventEmitter
 			|| pipeTransport != "consumeRemote"){
 				return ret;
 		}
-	
-		for(const peerOpt of linkOpt){
-			for(const joinedPer of this._getJoinedPeers()){
+		const{peerOpts} = linkOpt;
+		for(const peerOpt of peerOpts){
+			for(const joinedPeer of this._getJoinedPeers()){
 				await joinedPeer.notify({
 					id: peerOpt.id,
 					displayName: peerOpt.data.displayName,
