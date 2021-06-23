@@ -317,7 +317,7 @@ async function createExpressApp()
 				 pipeId,
 				 linkOpt
 			 } = req.body;
- 
+			 logger.info(req.body);
 			 try
 			 {
 				 req.room = rooms.get(roomId);
@@ -331,6 +331,28 @@ async function createExpressApp()
 		 });
  
  
+	 /**
+	  * POST API 
+	  */
+	  expressHttpApp.post(
+		'/pipe/pipes', async (req, res, next) =>
+		{
+			const {
+				roomId
+			} = req.body;
+
+			try
+			{
+				req.room = rooms.get(roomId);
+				const data = await req.room.pipes();
+				res.status(200).json(data);
+			}
+			catch (error)
+			{
+				next(error);
+			}
+		});
+
 	 /**
 	  * Error handler.
 	  */

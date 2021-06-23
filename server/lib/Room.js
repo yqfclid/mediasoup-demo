@@ -1268,12 +1268,24 @@ class Room extends EventEmitter
 			appData: {type: "consumeRemote", consumeProducerIds: [], produceConsumerIds: []}
 		};
 		let remoteRoomListnPipe = await this._mediasoupRouter.createPipeTransport(remoteListenParam);
+		remoteRoomListnPipe.on('trace', (trace) =>
+		{
+			logger.debug(
+				'transport "trace" event [transportId:%s, trace.type:%s, trace:%o]',
+				transport.id, trace.type, trace);
+		});
 		this._RoomPipes[remoteRoomListnPipe.id] = remoteRoomListnPipe;
 		let localListenParam = {
 			...config.mediasoup.pipeTransportOptions,
 			appData: {type: "consumeLocal", consumeProducerIds: [], produceConsumerIds: []}
 		};
 		let localRoomListnPipe = await this._mediasoupRouter.createPipeTransport(localListenParam);
+		localRoomListnPipe.on('trace', (trace) =>
+		{
+			logger.debug(
+				'transport "trace" event [transportId:%s, trace.type:%s, trace:%o]',
+				transport.id, trace.type, trace);
+		});
 		this._RoomPipes[localRoomListnPipe.id] = localRoomListnPipe;
 		let ret = {
 			consumeRemote: {
@@ -1292,11 +1304,14 @@ class Room extends EventEmitter
 	async pipeConnect(pipeOpts){
 		logger.info("room %s start connect remote room %s", this._roomId, pipeOpts);
 		for(const pipeOpt of pipeOpts){
+			logger.info("DDDDDD %s", pipeOpt);
 			const roomPipe = this._RoomPipes[pipeOpt.local.pipeId];
+			logger.info("DDDDDD %s", roomPipe);
 			if(roomPipe){
+				logger.info("DDDDDD %s, %s", pipeOpt.remote.ip, pipeOpt.remote.port);
 				await roomPipe.connect({ip: pipeOpt.remote.ip, port: pipeOpt.remote.port});
-				remotePipe.appData.remoteIp = pipeOpt.remote.ip;
-				remotePipe.appData.remotePort = pipeOpt.remote.port;
+				roomPipe.appData.remoteIp = pipeOpt.remote.ip;
+				roomPipe.appData.remotePort = pipeOpt.remote.port;
 			}
 		}
 		return {code: 0};
@@ -1385,7 +1400,7 @@ class Room extends EventEmitter
 	}
 	
 	
-	async pipeProduce({pipeId, linkOpt}){
+	async pipeProduce(pipeId, linkOpt){
 		logger.info("room %s execute pipe %s with opt %s", this._roomId, pipeId, linkOpt);
 		const pipeTransport = this._RoomPipes[pipeId];
 		let ret = {
@@ -1395,17 +1410,20 @@ class Room extends EventEmitter
 		if(pipeTransport === undefined
 			|| pipeTransport.closed
 			|| linkOpt == {}
-			|| pipeTransport != "consumeRemote"){
+			|| pipeTransport.appData.type != "consumeRemote"){
 				return ret;
 		}
 		const{peerOpts} = linkOpt;
 		for(const peerOpt of peerOpts){
 			for(const joinedPeer of this._getJoinedPeers()){
-				await joinedPeer.notify({
-					id: peerOpt.id,
-					displayName: peerOpt.data.displayName,
-					device: peerOpt.data.device
-				});
+				await joinedPeer.notify(
+					'newPeer',
+					{
+						id: peerOpt.id,
+						displayName: peerOpt.data.displayName,
+						device: peerOpt.data.device
+					})
+					.catch(() => {});
 			}
 			for(const consumeData of peerOpt.consumeDatas){
 				let peerProducer = await pipeTransport.produce({
@@ -1420,21 +1438,50 @@ class Room extends EventEmitter
 						kind: consumeData.kind,
 						rtpCapabilities: joinedPeer.data.rtpCapabilities
 					});
+					// consumer.on('layerschange', (layers) =>
+					// {
+					// if(consumeData.kind == "video"){
+					// 	joinedPeer.notify(
+					// 		'consumerLayersChanged',
+					// 		{
+					// 			consumerId    : consumer.id,
+					// 			spatialLayer  : 1,
+					// 			temporalLayer : 0
+					// 		})
+					// 		.catch(() => {});
+					// 	joinedPeer.notify(
+					// 		'consumerLayersChanged',
+					// 		{
+					// 			consumerId    : consumer.id,
+					// 			spatialLayer  : 1,
+					// 			temporalLayer : 1
+					// 		})
+					// 		.catch(() => {});
+					// }
+					// });
 					await joinedPeer.request('newConsumer', {
 						appData: {peerId: peerOpt.id},
-						peerid: peerOpt.id,
+						peerId: peerOpt.id,
 						producerId: peerProducer.id,
 						id: consumer.id,
 						kind: peerProducer.kind,
-						rtpParameters: consumeData.rtpParameters,
+						rtpParameters: consumer.rtpParameters,
 						type: "simple",
-						producerPaused: true
+						producerPaused: consumer.producerPaused
 					});
 				}
 			}
 			this._RemotePeers[peerOpt.id] = peerOpt;
 		}
 		return ret;
+	}
+
+
+	/**
+	 * 
+	 */
+	async pipes(){
+		return this._RoomPipes;
 	}
 }
 
