@@ -339,8 +339,21 @@ class Room extends EventEmitter
 						displayName : joinedPeer.data.displayName,
 						device      : joinedPeer.data.device
 					}));
+				
+				const remotePeers = [
+					...Object.values(this._RemotePeers)
+				];
 
-				accept({ peers: peerInfos });
+				const remotePeerInfos = remotePeers
+					.map((remotePeer) => ({
+						id          : remotePeer.id,
+						displayName : remotePeer.data.displayName,
+						device      : remotePeer.data.device
+					}));
+				
+				const totalPeers = [...peerInfos, ...remotePeerInfos];
+
+				accept({ peers: totalPeers });
 
 				// Mark the new Peer as joined.
 				peer.data.joined = true;
@@ -370,6 +383,16 @@ class Room extends EventEmitter
 								dataProducerPeer : joinedPeer,
 								dataProducer
 							});
+					}
+				}
+
+				for(const remotePeer of remotePeers){
+					for(const producer of remotePeer.producers){
+						this._createConsumer({
+							consumerPeer: peer,
+							producerPeer: remotePeer,
+							producer
+						})
 					}
 				}
 
@@ -538,7 +561,7 @@ class Room extends EventEmitter
 						appData
 						// keyFrameRequestDelay: 5000
 					});
-
+				
 				// Store the Producer into the protoo Peer data Object.
 				peer.data.producers.set(producer.id, producer);
 
@@ -1265,7 +1288,7 @@ class Room extends EventEmitter
 		logger.info("room %s start create pipe for remote link", this._roomId);
 		let remoteListenParam = {
 			...config.mediasoup.pipeTransportOptions,
-			appData: {type: "consumeRemote", consumeProducerIds: [], produceConsumerIds: []}
+			appData: {type: "consumeRemote", consumeProducerIds: [], produceConsumerIds: {}}
 		};
 		let remoteRoomListnPipe = await this._mediasoupRouter.createPipeTransport(remoteListenParam);
 		remoteRoomListnPipe.on('trace', (trace) =>
@@ -1277,7 +1300,7 @@ class Room extends EventEmitter
 		this._RoomPipes[remoteRoomListnPipe.id] = remoteRoomListnPipe;
 		let localListenParam = {
 			...config.mediasoup.pipeTransportOptions,
-			appData: {type: "consumeLocal", consumeProducerIds: [], produceConsumerIds: []}
+			appData: {type: "consumeLocal", consumeProducerIds: [], produceConsumerIds: {}}
 		};
 		let localRoomListnPipe = await this._mediasoupRouter.createPipeTransport(localListenParam);
 		localRoomListnPipe.on('trace', (trace) =>
@@ -1304,11 +1327,8 @@ class Room extends EventEmitter
 	async pipeConnect(pipeOpts){
 		logger.info("room %s start connect remote room %s", this._roomId, pipeOpts);
 		for(const pipeOpt of pipeOpts){
-			logger.info("DDDDDD %s", pipeOpt);
 			const roomPipe = this._RoomPipes[pipeOpt.local.pipeId];
-			logger.info("DDDDDD %s", roomPipe);
 			if(roomPipe){
-				logger.info("DDDDDD %s, %s", pipeOpt.remote.ip, pipeOpt.remote.port);
 				await roomPipe.connect({ip: pipeOpt.remote.ip, port: pipeOpt.remote.port});
 				roomPipe.appData.remoteIp = pipeOpt.remote.ip;
 				roomPipe.appData.remotePort = pipeOpt.remote.port;
@@ -1324,13 +1344,16 @@ class Room extends EventEmitter
 			peerOpts: []
 		};
 		const pipeTransport = this._RoomPipes[pipeId];
-		if(PipeTransport === undefined 
+		if(pipeTransport === undefined 
 			|| pipeTransport.closed
 			|| pipeTransport.appData.type != "consumeLocal"){
+			logger.info("DEBG111 %s, %s", pipeTransport, this._RoomPipes);
 			return ret;
 		}
-		const peer = this._protooRoom.peers.filter((peer) => peer.data.joined && peer.id == peerId);
+		logger.info("DEBG");
+		const peer = this._protooRoom.getPeer(peerId);
 		if(!peer){
+			logger.info("DEBGwww");
 			return ret;
 		}
 		let peerData = {
@@ -1345,15 +1368,15 @@ class Room extends EventEmitter
 					paused: true
 				});
 				let consumeData = {
-					rtpParameters: consumers.rtpParameters,
+					rtpParameters: consumer.rtpParameters,
 					kind: producer.kind
 				};
 				peerData.consumeDatas.push(consumeData);
 				pipeTransport.appData.consumeProducerIds.push(producer.id);
 			}
-			if(peerData.consumeDatas.length > 0){
-				ret.peerOpts.push(peerData);
-			}
+		}
+		if(peerData.consumeDatas.length > 0){
+			ret.peerOpts.push(peerData);
 		}
 		ret.success = true;
 		return ret;
@@ -1415,6 +1438,10 @@ class Room extends EventEmitter
 		}
 		const{peerOpts} = linkOpt;
 		for(const peerOpt of peerOpts){
+			if(!this._RemotePeers[peerOpt.id]){
+				this._RemotePeers[peerOpt.id] = {producers: [], id: peerOpt.id, data: peerOpt.data};
+			}
+			let remotePeer = this._RemotePeers[peerOpt.id];
 			for(const joinedPeer of this._getJoinedPeers()){
 				await joinedPeer.notify(
 					'newPeer',
@@ -1426,39 +1453,88 @@ class Room extends EventEmitter
 					.catch(() => {});
 			}
 			for(const consumeData of peerOpt.consumeDatas){
+				if(remotePeer.producers.filter((p) => p.kind == consumeData.kind).length > 0){
+					continue;
+				}
 				let peerProducer = await pipeTransport.produce({
 					kind: consumeData.kind,
-					rtpParameters:consumeData.rtpParameters
+					rtpParameters:consumeData.rtpParameters,
+					appData: {peerId: peerOpt.id}
 				});
+				remotePeer.producers.push(peerProducer);
 				for(const joinedPeer of this._getJoinedPeers()){
 					let transport = Array.from(joinedPeer.data.transports.values())
 					.find((t) => t.appData.consuming);
+					if(producer.id in joinedPeer.data.consumers){
+						continue;
+					}
 					let consumer = await transport.consume({
 						producerId: peerProducer.id,
 						kind: consumeData.kind,
 						rtpCapabilities: joinedPeer.data.rtpCapabilities
 					});
-					// consumer.on('layerschange', (layers) =>
-					// {
-					// if(consumeData.kind == "video"){
-					// 	joinedPeer.notify(
-					// 		'consumerLayersChanged',
-					// 		{
-					// 			consumerId    : consumer.id,
-					// 			spatialLayer  : 1,
-					// 			temporalLayer : 0
-					// 		})
-					// 		.catch(() => {});
-					// 	joinedPeer.notify(
-					// 		'consumerLayersChanged',
-					// 		{
-					// 			consumerId    : consumer.id,
-					// 			spatialLayer  : 1,
-					// 			temporalLayer : 1
-					// 		})
-					// 		.catch(() => {});
-					// }
-					// });
+
+					consumer.on('transportclose', () =>
+					{
+						// Remove from its map.
+						joinedPeer.data.consumers.delete(consumer.id);
+					});
+			
+					consumer.on('producerclose', () =>
+					{
+						// Remove from its map.
+						joinedPeer.data.consumers.delete(consumer.id);
+			
+						joinedPeer.notify('consumerClosed', { consumerId: consumer.id })
+							.catch(() => {});
+					});
+			
+					consumer.on('producerpause', () =>
+					{
+						joinedPeer.notify('consumerPaused', { consumerId: consumer.id })
+							.catch(() => {});
+					});
+			
+					consumer.on('producerresume', () =>
+					{
+						joinedPeer.notify('consumerResumed', { consumerId: consumer.id })
+							.catch(() => {});
+					});
+			
+					consumer.on('score', (score) =>
+					{
+						// logger.debug(
+						// 	'consumer "score" event [consumerId:%s, score:%o]',
+						// 	consumer.id, score);
+			
+						joinedPeer.notify('consumerScore', { consumerId: consumer.id, score })
+							.catch(() => {});
+					});
+			
+					consumer.on('layerschange', (layers) =>
+					{
+						joinedPeer.notify(
+							'consumerLayersChanged',
+							{
+								consumerId    : consumer.id,
+								spatialLayer  : layers ? layers.spatialLayer : null,
+								temporalLayer : layers ? layers.temporalLayer : null
+							})
+							.catch(() => {});
+					});
+			
+					// NOTE: For testing.
+					// await consumer.enableTraceEvent([ 'rtp', 'keyframe', 'nack', 'pli', 'fir' ]);
+					// await consumer.enableTraceEvent([ 'pli', 'fir' ]);
+					// await consumer.enableTraceEvent([ 'keyframe' ]);
+			
+					consumer.on('trace', (trace) =>
+					{
+						logger.debug(
+							'consumer "trace" event [producerId:%s, trace.type:%s, trace:%o]',
+							consumer.id, trace.type, trace);
+					});
+
 					await joinedPeer.request('newConsumer', {
 						appData: {peerId: peerOpt.id},
 						peerId: peerOpt.id,
@@ -1469,13 +1545,26 @@ class Room extends EventEmitter
 						type: "simple",
 						producerPaused: consumer.producerPaused
 					});
+					joinedPeer.data.consumers.set(consumer.id, consumer);
 				}
 			}
-			this._RemotePeers[peerOpt.id] = peerOpt;
 		}
 		return ret;
 	}
 
+	/**
+	 * 
+	 * @returns 
+	 */
+	async pipeCloseProducer(peerId, kind){
+		if(this._RemotePeers[peerId]){
+			let remotePeer = this._RemotePeers[peerId];
+			if(!remotePeer){
+				return;
+			}
+			remotePeer.producers.filter((p) => p.kind == kind);
+		}
+	}
 
 	/**
 	 * 
