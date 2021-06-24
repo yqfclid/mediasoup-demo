@@ -329,7 +329,55 @@ async function createExpressApp()
 				 next(error);
 			 }
 		 });
- 
+
+	 /**
+	  * POST API 
+	  */
+	  expressHttpApp.post(
+		'/pipe/closePeer', async (req, res, next) =>
+		{
+			const {
+				roomId,
+				peerId
+			} = req.body;
+			logger.info(req.body);
+			try
+			{
+				req.room = rooms.get(roomId);
+				await req.room.pipePeerClose(peerId);
+				res.status(200).json({code: 0});
+			}
+			catch (error)
+			{
+				next(error);
+			}
+		});		
+
+	 /**
+	  * POST API 
+	  */
+	  expressHttpApp.post(
+		'/pipe/closeProducer', async (req, res, next) =>
+		{
+			const {
+				roomId,
+				peerId,
+				kind
+			} = req.body;
+			logger.info(req.body);
+			try
+			{
+				req.room = rooms.get(roomId);
+				await req.room.pipeCloseProducer(peerId, kind);
+				res.status(200).json({code: 0});
+			}
+			catch (error)
+			{
+				next(error);
+			}
+		});		 
+
+
  
 	 /**
 	  * POST API 
