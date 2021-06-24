@@ -1558,11 +1558,22 @@ class Room extends EventEmitter
 	 */
 	async pipeCloseProducer(peerId, kind){
 		if(this._RemotePeers[peerId]){
-			let remotePeer = this._RemotePeers[peerId];
-			if(!remotePeer){
-				return;
+			const remotePeer = this._RemotePeers[peerId];
+			for(const producer of remotePeer.producers.filter((p) => p.kind == kind)){
+				let producerIndex = producer.indexOf(remotePeer.producers);
+				remotePeer.producers.splice(producerIndex, 1);
+				producer.close();
 			}
-			remotePeer.producers.filter((p) => p.kind == kind);
+		}
+	}
+
+	async pipePeerClose(peerId){
+		if(this._RemotePeers[peerId]){
+			let remotePeer = this._RemotePeers[peerId];
+			for(const producer of remotePeer.producers){
+				producer.close();
+			}
+			delete this._RemotePeers[peerId];
 		}
 	}
 
