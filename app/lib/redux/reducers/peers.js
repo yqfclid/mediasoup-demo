@@ -47,6 +47,8 @@ const peers = (state = initialState, action) =>
 		case 'ADD_CONSUMER':
 		{
 			const { consumer, peerId } = action.payload;
+			console.log("DEBUG");
+			console.log(peerId);
 			const peer = state[peerId];
 
 			if (!peer)
